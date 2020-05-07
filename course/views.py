@@ -8,15 +8,35 @@ from .models import Course,Student,course_enrolment
 def index(request):
     return HttpResponse("this is courseIndex")
 
-def totalstudents(request,course_id):
+def coursedetails(request,course_id):
 
     ceList = course_enrolment.objects.filter(course = course_id)
-    output = '';
+    output = 'course name is ' + ceList[0].curse.name;
+    if ceList.count()<=0:
+        output = output + ' and no student enrolled for this course';
+    else:
+        output = output + ' and student enrolled for this course are ';
     for ce in ceList:
         output = output +'\n'+ce.student.name;
 
 
     return HttpResponse(output);
+
+def studentdetails(request,student_id):
+
+    ceList = course_enrolment.objects.filter(student = student_id)
+    output = 'student  name is ' + ceList[0].student.name;
+    if ceList.count() <= 0:
+        output = output + ' and student is not enrolled for any course';
+    else:
+        output = output + ' and student enrolled for courses ';
+    for ce in ceList:
+        output = output +'\n'+ce.course.name;
+
+
+    return HttpResponse(output);
+
+
 
 def enroll(request,course_id,student_id):
     c = Course.objects.filter(id = course_id)[0];
@@ -56,4 +76,22 @@ def updatestudentname(request,student_id,name):
     c.name = name;
     c.save()
     return HttpResponse('student name is updated')
+
+def deletestudent(request,student_id):
+    students = Student.objects.filter(id = student_id)
+    if students.count()<=0 :
+        return HttpResponse("student not found")
+    s = students[0];
+    s.delete()
+    return HttpResponse("student is deleted")
+
+def deletecourse(request,course_id):
+    courses = Course.objects.filter(id = course_id)
+    if courses.count()<=0 :
+        return HttpResponse("course not found")
+    s = courses[0];
+    s.delete()
+    return HttpResponse("courses is deleted")
+
+
 
