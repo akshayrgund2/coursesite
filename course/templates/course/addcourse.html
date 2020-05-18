@@ -1,0 +1,11 @@
+<form action="/course/addcourse" method="post">
+  {% csrf_token %}
+  <label for="coursename">Course name:</label><br>
+  <input type="text" id="coursename" name="coursename" value=""><br>
+  <label for="institute">institute name:</label><br>
+  <input type="text" id="institute" name="institute" value=""><br><br><label for="institute">institute name:</label><br>
+  <label for="fees">fees:</label><br>
+  <input type="number" id="fees" name="fees" value=""><br><br>
+
+  <input type="submit" value="Submit">
+</form>

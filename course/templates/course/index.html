@@ -1,0 +1,14 @@
+
+
+{% if course%}
+<ul>
+    <li><a>'course name is {{course.name}}'</a></li>
+</ul>
+
+{% endif %}
+
+{% for ce in ceList%}
+<ul>
+    <li><a>' {{ce.student.name}}'</a></li>
+</ul>
+{% endfor %}

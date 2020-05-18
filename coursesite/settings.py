@@ -25,6 +25,9 @@ SECRET_KEY = '97^h4t8mfpsum3m9_rj1d=)krm#(g-6+aqh4gigquy)tux7y#u'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
+# Redirect to home URL after login (Default redirects to /accounts/profile/)
+LOGIN_REDIRECT_URL = '/admin'
+
 ALLOWED_HOSTS = []
 
 
@@ -48,14 +51,50 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
+
+    'course.mymiddlewere.TerminalLogging',
+
+
+
 ]
+
+# trial
+
+"""
+LOGGING = {
+    'version': 1,
+    'filters': {
+        'require_debug_true': {
+            '()': 'django.utils.log.RequireDebugTrue',
+        }
+    },
+    'handlers': {
+        'console': {
+            'level': 'DEBUG',
+            'filters': ['require_debug_true'],
+            'class': 'logging.StreamHandler',
+        }
+    },
+    'loggers': {
+        'django.db.backends': {
+            'level': 'DEBUG',
+            'handlers': ['console'],
+        }
+    }
+}
+"""
+
+
+
+
 
 ROOT_URLCONF = 'coursesite.urls'
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],# why?????????
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -77,7 +116,7 @@ WSGI_APPLICATION = 'coursesite.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE':  'django.db.backends.postgresql',
-        'NAME': 'CorseDb',
+        'NAME': 'CourseDb2',
         'USER': 'postgres',
 
         'PASSWORD': 'Climbing@247',

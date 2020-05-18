@@ -1,63 +1,123 @@
 from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic.edit import CreateView
+from .forms import StudentForm, EnrollForm
+from django.db import connection
+
+import json
 
 # Create your views here.
 
 from django.http import HttpResponse
 from .models import Course,Student,course_enrolment
+from django.template import loader
 
 def index(request):
-    return HttpResponse("this is courseIndex")
+    studentlist = Student.objects.all()
+    studentdict = {};
+    allstudentdict = {};
+    for s in studentlist:
+        studentdict['email'] = s.email
+        studentdict['rollnumber'] = s.rollnumber
+        studentdict['phone'] = s.phone
+        allstudentdict['student '+ s.name] = studentdict;
+
+    return HttpResponse(json.dumps(allstudentdict))
+
+
 
 def coursedetails(request,course_id):
 
     ceList = course_enrolment.objects.filter(course = course_id)
-    output = 'course name is ' + ceList[0].curse.name;
-    if ceList.count()<=0:
-        output = output + ' and no student enrolled for this course';
-    else:
-        output = output + ' and student enrolled for this course are ';
-    for ce in ceList:
-        output = output +'\n'+ce.student.name;
+    course = ceList[0].course;
+    templet  = loader.get_template('course/index.html')
+    context = {
+       'course' : course,
+        'ceList' : ceList,
+    }
+
+    return HttpResponse(templet.render(context,request)) ;
 
 
-    return HttpResponse(output);
+
 
 def studentdetails(request,student_id):
+    #ceList = course_enrolment.objects.filter(student = student_id)
+    details = {};
+    details["name"] = Student.objects.raw('SELECT * FROM course_student')[0].name
 
-    ceList = course_enrolment.objects.filter(student = student_id)
-    output = 'student  name is ' + ceList[0].student.name;
-    if ceList.count() <= 0:
-        output = output + ' and student is not enrolled for any course';
-    else:
-        output = output + ' and student enrolled for courses ';
-    for ce in ceList:
-        output = output +'\n'+ce.course.name;
-
-
-    return HttpResponse(output);
-
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "select * from course_course "
+            "join course_course_enrolment on course_course.id = course_course_enrolment.course_id "
+            "where course_course_enrolment.student_id = %s",[student_id]
+        )
+        details['courses'] = cursor.fetchall()
 
 
-def enroll(request,course_id,student_id):
-    c = Course.objects.filter(id = course_id)[0];
-    s = Student.objects.filter(id = student_id)[0];
+    return HttpResponse(json.dumps(details));
+
+
+
+@login_required(login_url='/accounts/login/')
+def enrollform(request):
+    context = {}
+    form = EnrollForm(request.POST or None, request.FILES or None)
+    if form.is_valid():
+        form.save()
+    context['form'] = form;
+    return render(request, 'course/enroll.html', context)
+
+
+@login_required(login_url='/accounts/login/')
+def enroll(request):
+    c = Course(request.POST['course'])
+    s = Student(request.POST['student'])
     ce = course_enrolment(course = c,student = s)
     ce.save();
     return HttpResponse('Enrolled')
 
-def addcourse(request,name):
-    courses = Course.objects.filter(name=name)
+@login_required(login_url='/accounts/login/')
+def addcourseform(request):
+    context = {}
+    return render(request, 'course/addcourse.html', context)
+
+@login_required(login_url='/accounts/login/')
+def addcourse(request):
+
+    courses = Course.objects.filter(name = request.POST['coursename'])
     if courses.count()>0:
         return HttpResponse("course already present");
-    c = Course(name = name);
+    c = Course();
+    c.name = request.POST['coursename'];
+    c.fees = request.POST['fees'];
+    c.institute = request.POST['institute'];
     c.save();
     return HttpResponse("course is added")
 
-def addstudent(request,name):
 
-    c = Student(name = name);
-    c.save();
-    return HttpResponse("student is added")
+@login_required(login_url='/accounts/login/')
+def addstudentform(request):
+    context = {}
+    form = StudentForm(request.POST or None, request.FILES or None)
+    if form.is_valid():
+        # save the form data to model
+        form.save()
+    context['form'] = form
+    return render(request, 'course/addstudent.html', context)
+
+
+@login_required(login_url='/accounts/login/')
+def addstudent(request):
+
+    s = Student();
+    s.name = request.POST['name']
+    s.email = request.POST['email']
+    s.phone = request.POST['phone']
+    s.rollnumber = request.POST['rollnumber']
+    s.save()
+    return HttpResponse('student added')
 
 def updatecoursename(request,course_id,name):
     courses = Course.objects.filter(id=course_id)
